@@ -1,0 +1,130 @@
+{
+  "paragraphs": [
+    {
+      "title": "",
+      "text": "%pyspark\nimport os, blendata_util, mlflow\nfrom datetime import datetime, timedelta\nimport pyspark.sql.functions as F\nimport pyspark.sql.types import T\n\nos.environ[\"MLFLOW_TRACKING_URI\"] \u003d \"XXXXXXXXXXXXXXXXXX\"\nos.environ[\"MLFLOW_TRACKING_USERNAME\"] \u003d blendata_util.getUser()\nos.environ[\"MLFLOW_TRACKING_PASSWORD\"] \u003d \"XXXXXXXXXXXX\"\ndfs_tmpdir \u003d \"/bdedatastore/zeus/tmp\"\n\nmlflow.set_workspace(\"komsan-workspace\")\n\ndt_now \u003d datetime.now()\nfmt_pdate \u003d lambda dt: long(dt.strftime(\"%Y%m%d\"))\n\ndf \u003d spark.sql(f\"select * from fraud_inference where partition_date \u003d {fmt_pdate(dt_now - timedelta(days\u003d1))}\")\n\nmodel_uri \u003d \"models:\" + \"/\".join[\"\", \"demo-fraud\", \"latest\"]\nmodel \u003d mlflow.spark.load_model(model_uri, dfs_tmpdir\u003ddfs_tmpdir)\ndf_pred \u003d model.transform(df)\n\ndf_pred \u003d df_pred.withColumns({\n    \"pred_timestamp\": lit(dt_now), \n    \"partition_date\": lit(pdate_now)\n    }) \\\n    .drop(\"features\")\n\ndf_pred.write.insertInto(\"fraud_pred\")",
+      "user": "anonymous",
+      "dateUpdated": "2026-07-29 15:10:12.833",
+      "progress": 0,
+      "config": {
+        "lineNumbers": true,
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "colWidth": 12.0,
+        "editorMode": "ace/mode/python",
+        "fontSize": 9.0,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": []
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 2000,
+      "jobName": "paragraph_1781253987342_1371296735",
+      "id": "paragraph_1781253987342_1371296735",
+      "dateCreated": "2026-06-12 15:46:27.342",
+      "dateStarted": "2026-06-12 15:46:41.749",
+      "runBy": "komsan",
+      "dateFinished": "2026-06-12 15:47:07.538",
+      "status": "FINISHED"
+    },
+    {
+      "text": "%pyspark\nfrom pyspark.ml.evaluation import MulticlassClassificationEvaluator\n\nMulticlassClassificationEvaluator().evaluate(df_pred)",
+      "user": "anonymous",
+      "dateUpdated": "2026-06-12 15:50:43.504",
+      "progress": 0,
+      "config": {
+        "lineNumbers": true,
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "colWidth": 12.0,
+        "editorMode": "ace/mode/scala",
+        "fontSize": 9.0,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "1.0\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://ip-172-16-2-26.ap-southeast-1.compute.internal:4043/jobs/job?id\u003d65"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 2000,
+      "jobName": "paragraph_1781254130529_2013366034",
+      "id": "paragraph_1781254130529_2013366034",
+      "dateCreated": "2026-06-12 15:48:50.529",
+      "dateStarted": "2026-06-12 15:50:43.514",
+      "runBy": "komsan",
+      "dateFinished": "2026-06-12 15:50:53.869",
+      "status": "FINISHED"
+    },
+    {
+      "text": "%pyspark\n",
+      "user": "anonymous",
+      "dateUpdated": "2026-06-12 15:50:10.406",
+      "progress": 0,
+      "config": {
+        "lineNumbers": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 2000,
+      "jobName": "paragraph_1781254210406_844260131",
+      "id": "paragraph_1781254210406_844260131",
+      "dateCreated": "2026-06-12 15:50:10.406",
+      "status": "READY"
+    }
+  ],
+  "name": "model-inference-batch",
+  "id": "2MT2XC86T",
+  "defaultInterpreterGroup": "spark",
+  "version": "4.7.1",
+  "noteParams": {},
+  "noteForms": {},
+  "angularObjects": {},
+  "config": {
+    "isZeppelinNotebookCronEnable": true
+  },
+  "info": {}
+}
