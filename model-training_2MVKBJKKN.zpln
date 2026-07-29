@@ -43,9 +43,9 @@
     },
     {
       "title": "",
-      "text": "%pyspark\nimport pyspark.sql.functions as F\nimport pyspark.sql.types import T\nfrom pyspark.ml import Pipeline\nfrom pyspark.ml.feature import StringIndexer, OneHotEncoder, VectorAssembler, MinMaxScaler\nfrom pyspark.ml.evaluation import BinaryClassificationEvaluator\nfrom pyspark.ml.tuning import CrossValidator, CrossValidatorModel, ParamGridBuilder\nimport os, blendata_util\n\nos.environ[\"MLFLOW_TRACKING_URI\"] \u003d \"XXXXXXXXXXXXXXXXXX\"\nos.environ[\"MLFLOW_TRACKING_USERNAME\"] \u003d blendata_util.getUser()\nos.environ[\"MLFLOW_TRACKING_PASSWORD\"] \u003d \"XXXXXXXXXXXX\"\ndfs_tmpdir \u003d \"/bdedatastore/zeus/tmp\"\n\ndf \u003d spark.sql(\"select * from fraud_train_clean\")\ndf \u003d df.withColumn(\"label\", F.col(\"fraud\").cast(T.DoubleType()))\n\ncols_si_in \u003d [\"transaction_type\", \"merchant_category\", \"country\"]\ncols_si_out \u003d [f\"{c}_idx\" for c in cols_str_in]\ncols_ohe_out \u003d [f\"{c}_enc\" for c in cols_str_in]\ncols_va_mms_in \u003d [\"amount\", \"device_risk_score\", \"ip_risk_score\"]\ncol_va_mms_out \u003d \"features_to_scale\"\ncol_mms_out \u003d \"features_scaled\"\ncols_va_in \u003d cols_ohe_out + col_mms_out + [\"hour\"]\n\nsi \u003d StringIndexer(inputCols\u003dcols_si_in, outputCols\u003dcols_si_out)\nohe \u003d OneHotEncoder(inputCols\u003dcols_si_out, outputCols\u003dcols_ohe_out)\nva_mms \u003d VectorAssembler(inputCols\u003dcols_va_mms_in, outputCol\u003dcol_va_mms_out)\nmms \u003d MinMaxScaler(inputCol\u003dcol_va_mms_out, outputCol\u003dcol_mms_out)\nva \u003d VectorAssembler(inputCols\u003dcols_va_in, outputCol\u003d\"features\")\n\npl_stages \u003d [si, ohe, va_mms, mms, va]\n\nbce \u003d BinaryClassificationEvaluator()",
+      "text": "%pyspark\n# import libraries\nimport pyspark.sql.functions as F\nimport pyspark.sql.types import T\nfrom pyspark.ml import Pipeline\nfrom pyspark.ml.feature import StringIndexer, OneHotEncoder, VectorAssembler, MinMaxScaler\nfrom pyspark.ml.evaluation import BinaryClassificationEvaluator\nfrom pyspark.ml.tuning import CrossValidator, CrossValidatorModel, ParamGridBuilder\nimport os, blendata_util\n\n# set up environment variables\nos.environ[\"MLFLOW_TRACKING_URI\"] \u003d \"XXXXXXXXXXXXXXXXXX\"\nos.environ[\"MLFLOW_TRACKING_USERNAME\"] \u003d blendata_util.getUser()\nos.environ[\"MLFLOW_TRACKING_PASSWORD\"] \u003d \"XXXXXXXXXXXX\"\ndfs_tmpdir \u003d \"/bdedatastore/zeus/tmp\"\n\n# get data ready\ndf \u003d spark.sql(\"select * from fraud_train_clean\")\ndf \u003d df.withColumn(\"label\", F.col(\"fraud\").cast(T.DoubleType()))\n\n# create preprocessors\ncols_si_in \u003d [\"transaction_type\", \"merchant_category\", \"country\"]\ncols_si_out \u003d [f\"{c}_idx\" for c in cols_str_in]\ncols_ohe_out \u003d [f\"{c}_enc\" for c in cols_str_in]\ncols_va_mms_in \u003d [\"amount\", \"device_risk_score\", \"ip_risk_score\"]\ncol_va_mms_out \u003d \"features_to_scale\"\ncol_mms_out \u003d \"features_scaled\"\ncols_va_in \u003d cols_ohe_out + col_mms_out + [\"hour\"]\n\nsi \u003d StringIndexer(inputCols\u003dcols_si_in, outputCols\u003dcols_si_out)\nohe \u003d OneHotEncoder(inputCols\u003dcols_si_out, outputCols\u003dcols_ohe_out)\nva_mms \u003d VectorAssembler(inputCols\u003dcols_va_mms_in, outputCol\u003dcol_va_mms_out)\nmms \u003d MinMaxScaler(inputCol\u003dcol_va_mms_out, outputCol\u003dcol_mms_out)\nva \u003d VectorAssembler(inputCols\u003dcols_va_in, outputCol\u003d\"features\")\n\n# prepare pipeline stages\npl_stages \u003d [si, ohe, va_mms, mms, va]\n\n# prepare evaluator\nbce \u003d BinaryClassificationEvaluator()",
       "user": "anonymous",
-      "dateUpdated": "2026-07-29 14:43:30.315",
+      "dateUpdated": "2026-07-29 15:40:03.937",
       "progress": 0,
       "config": {
         "lineNumbers": true,
@@ -82,9 +82,9 @@
       "status": "FINISHED"
     },
     {
-      "text": "%pyspark\nimport mlflow\n\nmlflow.set_workspace(\"komsan-workspace\")\nmlflow.set_experiment(\"demo-fraud-detection\")\nmlflow.pyspark.ml.autolog(log_models\u003dFalse)\n\ndef train_model(model, param_grid, run_name, cv_evaluator\u003dbce, cv_num_folds\u003d3, mlflow_artifact_path\u003d\"estimator\"):\n    pl_stages_wmodel \u003d pl_stages + [model]\n    pl \u003d Pipeline(stages\u003dpl_stages_wmodel)\n\n    with mlflow.start_run(run_name\u003drun_name) as run:\n        cv \u003d CrossValidator(\n            estimator\u003dmodel, \n            estimatorParamMaps\u003dparam_grid, \n            evaluator\u003dcv_evaluator, \n            numFolds\u003dcv_num_folds\n        )\n        \n        cv_model \u003d cv.fit(df)\n        best_model \u003d cv_model.bestModel\n        mlflow.spark.log_model(best_model, artifact_path\u003dmlflow_artifact_path, dfs_tmpdir\u003ddfs_tmpdir)\n        \n        run_id \u003d mlflow.active_run().info.run_id\n        highest_score \u003d max(cv_model.avgMetrics)\n        return [run_id, highest_score]\n\nruns_rec \u003d []",
+      "text": "%pyspark\n# set up MLflow configurations\nimport mlflow\n\nmlflow.set_workspace(\"komsan-workspace\")\nmlflow.set_experiment(\"demo-fraud-detection\")\nmlflow.pyspark.ml.autolog(log_models\u003dFalse)\n\n# function to train model and log model training results\ndef train_model(model, param_grid, run_name, cv_evaluator\u003dbce, cv_num_folds\u003d3, mlflow_artifact_path\u003d\"estimator\"):\n    # add model into pipeline stages\n    pl_stages_wmodel \u003d pl_stages + [model]\n    pl \u003d Pipeline(stages\u003dpl_stages_wmodel)\n\n    # start logging training result\n    with mlflow.start_run(run_name\u003drun_name) as run:\n        # perform cross validation\n        cv \u003d CrossValidator(\n            estimator\u003dmodel, \n            estimatorParamMaps\u003dparam_grid, \n            evaluator\u003dcv_evaluator, \n            numFolds\u003dcv_num_folds\n        )\n        \n        cv_model \u003d cv.fit(df)\n        best_model \u003d cv_model.bestModel # get the best model\n        mlflow.spark.log_model(best_model, artifact_path\u003dmlflow_artifact_path, dfs_tmpdir\u003ddfs_tmpdir) # log the best model\n        \n        run_id \u003d mlflow.active_run().info.run_id # get current run ID\n        highest_score \u003d max(cv_model.avgMetrics) # get the best model\u0027s training score\n        return [run_id, highest_score]\n\n# create experiment records\nruns_rec \u003d []",
       "user": "anonymous",
-      "dateUpdated": "2026-07-29 14:43:34.067",
+      "dateUpdated": "2026-07-29 15:46:59.149",
       "progress": 0,
       "config": {
         "lineNumbers": true,
@@ -113,9 +113,9 @@
       "status": "READY"
     },
     {
-      "text": "%pyspark\nfrom pyspark.ml.classification import RandomForestClassifier\n\nrfc \u003d RandomForestClassifier()\n\npg_rfc \u003d ParamGridBuilder() \\\n    .addGrid(rfc.maxDepth, [2, 5, 10]) \\\n    .addGrid(rfc.maxBins, [16, 32, 64]) \\\n    .addGrid(rfc.numTrees, [10, 20, 40]) \\\n    .build()\n\nrun_result \u003d train_model(rfc, pg_rfc, \"RandomForestClassifier\")\nruns_rec.append(run_result)\n\n\nfrom pyspark.ml.classification import GBTClassifier\n\ngbtc \u003d GBTClassifier()\n\npg_gbtc \u003d ParamGridBuilder() \\\n    .addGrid(gbtc.maxDepth, [2, 5, 10]) \\\n    .addGrid(gbtc.maxBins, [16, 32, 64]) \\\n    .build()\n\nrun_result \u003d train_model(gbtc, pg_gbtc, \"GBTClassifier\")\nruns_rec.append(run_result)",
+      "text": "%pyspark\n# train RandomForestClassifier model\nfrom pyspark.ml.classification import RandomForestClassifier\n\nrfc \u003d RandomForestClassifier()\n\npg_rfc \u003d ParamGridBuilder() \\\n    .addGrid(rfc.maxDepth, [2, 5, 10]) \\\n    .addGrid(rfc.maxBins, [16, 32, 64]) \\\n    .addGrid(rfc.numTrees, [10, 20, 40]) \\\n    .build()\n\nrun_result \u003d train_model(rfc, pg_rfc, \"RandomForestClassifier\")\nruns_rec.append(run_result) # record training result\n\n# train GBTClassifier model\nfrom pyspark.ml.classification import GBTClassifier\n\ngbtc \u003d GBTClassifier()\n\npg_gbtc \u003d ParamGridBuilder() \\\n    .addGrid(gbtc.maxDepth, [2, 5, 10]) \\\n    .addGrid(gbtc.maxBins, [16, 32, 64]) \\\n    .build()\n\nrun_result \u003d train_model(gbtc, pg_gbtc, \"GBTClassifier\")\nruns_rec.append(run_result) # record training result",
       "user": "anonymous",
-      "dateUpdated": "2026-07-29 12:41:58.325",
+      "dateUpdated": "2026-07-29 15:45:19.386",
       "progress": 0,
       "config": {
         "lineNumbers": true,
@@ -1310,20 +1310,20 @@
       "status": "ERROR"
     },
     {
-      "text": "%pyspark\nimport numpy as np\n\ntrain_scores \u003d runs_rec[:,1]\nmax_idx \u003d np.argmax(train_scores)\nbest_run_id \u003d runs_rec[max_idx][0]\n\nmodel_uri \u003d \"mlflow-artifacts:\" + \"/\".join[\"\", \"workspaces\", \"komsan-workspace\", \"3\", best_run_id, \"artifacts\", \"estimator\"]\nmlflow.register_model(model_uri\u003dmodel_uri, name\u003d\"demo-fraud\")",
+      "text": "%pyspark\n# find the best training result\nimport numpy as np\n\ntrain_scores \u003d runs_rec[:,1]\nmax_idx \u003d np.argmax(train_scores)\nbest_run_id \u003d runs_rec[max_idx][0]\n\n# register the best model\nmodel_uri \u003d \"mlflow-artifacts:\" + \"/\".join[\"\", \"workspaces\", \"komsan-workspace\", \"3\", best_run_id, \"artifacts\", \"estimator\"]\nmlflow.register_model(model_uri\u003dmodel_uri, name\u003d\"demo-fraud\")",
       "user": "anonymous",
-      "dateUpdated": "2026-07-29 13:08:03.747",
+      "dateUpdated": "2026-07-29 15:42:36.761",
       "progress": 0,
       "config": {
         "lineNumbers": true,
         "editorSetting": {
-          "language": "scala",
+          "language": "python",
           "editOnDblClick": false,
           "completionKey": "TAB",
           "completionSupport": true
         },
         "colWidth": 12.0,
-        "editorMode": "ace/mode/scala",
+        "editorMode": "ace/mode/python",
         "fontSize": 9.0,
         "results": {},
         "enabled": true
