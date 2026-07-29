@@ -40,62 +40,6 @@
       "status": "FINISHED"
     },
     {
-      "text": "%pyspark\nfrom pyspark.ml.evaluation import MulticlassClassificationEvaluator\n\nMulticlassClassificationEvaluator().evaluate(df_pred)",
-      "user": "anonymous",
-      "dateUpdated": "2026-06-12 15:50:43.504",
-      "progress": 0,
-      "config": {
-        "lineNumbers": true,
-        "editorSetting": {
-          "language": "scala",
-          "editOnDblClick": false,
-          "completionKey": "TAB",
-          "completionSupport": true
-        },
-        "colWidth": 12.0,
-        "editorMode": "ace/mode/scala",
-        "fontSize": 9.0,
-        "results": {},
-        "enabled": true
-      },
-      "settings": {
-        "params": {},
-        "forms": {}
-      },
-      "results": {
-        "code": "SUCCESS",
-        "msg": [
-          {
-            "type": "TEXT",
-            "data": "1.0\n"
-          }
-        ]
-      },
-      "apps": [],
-      "runtimeInfos": {
-        "jobUrl": {
-          "propertyName": "jobUrl",
-          "label": "SPARK JOB",
-          "tooltip": "View in Spark web UI",
-          "group": "spark",
-          "values": [
-            {
-              "jobUrl": "http://ip-172-16-2-26.ap-southeast-1.compute.internal:4043/jobs/job?id\u003d65"
-            }
-          ],
-          "interpreterSettingId": "spark"
-        }
-      },
-      "progressUpdateIntervalMs": 2000,
-      "jobName": "paragraph_1781254130529_2013366034",
-      "id": "paragraph_1781254130529_2013366034",
-      "dateCreated": "2026-06-12 15:48:50.529",
-      "dateStarted": "2026-06-12 15:50:43.514",
-      "runBy": "komsan",
-      "dateFinished": "2026-06-12 15:50:53.869",
-      "status": "FINISHED"
-    },
-    {
       "text": "%pyspark\n",
       "user": "anonymous",
       "dateUpdated": "2026-06-12 15:50:10.406",
